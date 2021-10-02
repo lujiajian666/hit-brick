@@ -51,7 +51,7 @@ const HTML_TAGS = {
       formValidate: 'formvalidate',
       formTarget: 'formtarget',
       type: 'type',
-      value: 'value',
+      value: 'value'
     }
   },
   canvas: {
@@ -92,7 +92,7 @@ const HTML_TAGS = {
       height: 'height',
       src: 'src',
       type: 'type',
-      width: 'width',
+      width: 'width'
     }
   },
   fieldset: {
@@ -116,7 +116,7 @@ const HTML_TAGS = {
       method: 'method',
       name: 'name',
       noValidate: 'novalidate',
-      target: 'target',
+      target: 'target'
     }
   },
   h1: 'h1',
@@ -160,7 +160,7 @@ const HTML_TAGS = {
       step: 'step',
       type: 'type',
       value: 'value',
-      width: 'width',
+      width: 'width'
     }
   },
   img: {
@@ -176,7 +176,7 @@ const HTML_TAGS = {
       src: 'src',
       srcset: 'srcset',
       width: 'width',
-      useMap: 'usemap',
+      useMap: 'usemap'
     }
   },
   ins: 'ins',
@@ -208,7 +208,7 @@ const HTML_TAGS = {
       min: 'min',
       max: 'max',
       optimum: 'optimum',
-      value: 'value',
+      value: 'value'
     }
   },
   nav: 'nav',
@@ -222,7 +222,7 @@ const HTML_TAGS = {
       type: 'type',
       typeMustmatch: 'typemustmatch',
       useMap: 'usemap',
-      width: 'width',
+      width: 'width'
     }
   },
   optgroup: {
@@ -262,7 +262,7 @@ const HTML_TAGS = {
     name: 'progress',
     attributes: {
       max: 'max',
-      value: 'value',
+      value: 'value'
     }
   },
   rp: 'rp',
@@ -281,7 +281,7 @@ const HTML_TAGS = {
       multiple: 'multiple',
       name: 'name',
       required: 'required',
-      size: 'size',
+      size: 'size'
     }
   },
   small: 'small',
@@ -292,7 +292,7 @@ const HTML_TAGS = {
       sizes: 'sizes',
       src: 'src',
       srcset: 'srcset',
-      type: 'type',
+      type: 'type'
     }
   },
   span: 'span',
@@ -320,7 +320,7 @@ const HTML_TAGS = {
       required: 'required',
       rows: 'rows',
       selectionDirection: 'selectionDirection',
-      wrap: 'wrap',
+      wrap: 'wrap'
     }
   },
   td: 'td',
@@ -356,7 +356,7 @@ const HTML_TAGS = {
       src: 'src',
       width: 'width'
     }
-  },
+  }
 }
 const GLOBAL_ATTRIBUTES = {
   accessKey: 'accesskey',
@@ -377,7 +377,7 @@ const GLOBAL_ATTRIBUTES = {
   spellCheck: 'spellcheck',
   tabIndex: 'tabindex',
   title: 'title',
-  translate: 'translate',
+  translate: 'translate'
 }
 const EVENT_HANDLERS = {
   onClick: 'click',
@@ -391,7 +391,6 @@ const EVENT_HANDLERS = {
   onWheel: 'mousewheel',
   onMouseDown: 'mousedown',
   onMouseUp: 'mouseup',
-  onMouseDown: 'mousedown',
   onMouseMove: 'mousemove',
   onMouseEnter: 'mouseenter',
   onMouseOver: 'mouseover',
@@ -448,8 +447,8 @@ const EVENT_HANDLERS = {
   onAnimationIteration: 'animationiteration',
   onTransitionEnd: 'transitionend'
 }
-function createElement(tagName, props = {}, ...childNodes) {
-  console.debug(tagName, props, ...childNodes);
+function createElement (tagName, props = {}, ...childNodes) {
+  console.debug(tagName, props, ...childNodes)
   if (props === null) {
     props = {}
   }
@@ -492,5 +491,5 @@ function createElement(tagName, props = {}, ...childNodes) {
   return el
 }
 
-window.React = {};
-React.createElement = createElement;
+window.React = {}
+React.createElement = createElement
