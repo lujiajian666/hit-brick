@@ -31,7 +31,8 @@ function IndexPage () {
     height: 10,
     width: 120,
     xDirect: 1,
-    stepLength: 0
+    stepLength: 0,
+    maxStepLength: 14
   }
   const drawList = [
     {
@@ -49,10 +50,10 @@ function IndexPage () {
       const e = event || window.event
       if (e && e.keyCode === 39) { // press >
         rectPoint.xDirect = 1
-        rectPoint.stepLength = 14
+        rectPoint.stepLength = rectPoint.maxStepLength
       } else if (e && e.keyCode === 37) { // press <
         rectPoint.xDirect = -1
-        rectPoint.stepLength = 14
+        rectPoint.stepLength = rectPoint.maxStepLength
       }
     }
 

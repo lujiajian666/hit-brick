@@ -22,19 +22,24 @@ function startDrawCircle ({ ctx, height, width, point, rectPoint, remove }) {
   ctx.fillStyle = 'white'
 
   const targetY = point.y + point.yDirect * stepLength
+  const targetX = point.x + point.xDirect * stepLength
+  const isIntersect = intersect(rectPoint, { x: targetX, y: targetY, r: point.r })
+
   if (targetY > height) {
     remove()
     return
   }
-  if (targetY < 0 || intersect(rectPoint, point)) {
+  if (targetY < 0 || isIntersect) {
     point.yDirect *= -1
   }
-  point.y = point.y + point.yDirect * stepLength
-
-  const targetX = point.x + point.xDirect * stepLength
-  if (targetX > width || targetX < 0 || intersect(rectPoint, point)) {
+  if (targetX > width || targetX < 0 || isIntersect) {
     point.xDirect *= -1
   }
+  if (isIntersect) {
+    // 赋予水平方向的速度
+    point.xDirect += rectPoint.xDirect * rectPoint.stepLength / rectPoint.maxStepLength
+  }
+  point.y = point.y + point.yDirect * stepLength
   point.x = point.x + point.xDirect * stepLength
 
   ctx.arc(point.x, point.y, point.r, 0, 2 * Math.PI)
