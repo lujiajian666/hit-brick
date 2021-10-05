@@ -448,7 +448,6 @@ const EVENT_HANDLERS = {
   onTransitionEnd: 'transitionend'
 }
 function createElement (tagName, props = {}, ...childNodes) {
-  console.debug(tagName, props, ...childNodes)
   if (props === null) {
     props = {}
   }

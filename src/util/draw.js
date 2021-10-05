@@ -60,7 +60,7 @@ function startDrawRect ({ ctx, width, point }) {
 function intersect (rect, circle) {
   const targetPoint = {}
 
-  if (circle.y < rect.y + circle.r) {
+  if (circle.y <= rect.y - circle.r) {
     targetPoint.y = rect.y
   } else {
     return false
@@ -73,7 +73,7 @@ function intersect (rect, circle) {
   } else {
     targetPoint.x = circle.x
   }
-  return Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) < circle.r
+  return Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
 }
 
 export { startDrawCircle, collectDraw, startDrawRect }

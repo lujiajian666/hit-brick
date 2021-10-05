@@ -5,17 +5,17 @@ import {
 } from '../../util/draw'
 import './index.css'
 let id = 0
-function createSingleCircle ({ rectPoint, drawList }) {
+function createSingleCircle ({ rectPoint, drawList, x, y }) {
   const singleCircle = {
     id: ++id,
     handle: startDrawCircle,
     param: {
       point: {
-        x: 0,
-        y: 0,
+        x,
+        y,
         r: 5,
-        xDirect: 1,
-        yDirect: 1
+        xDirect: 0,
+        yDirect: -1
       },
       rectPoint: rectPoint
     }
@@ -62,7 +62,12 @@ function IndexPage () {
   const inner = (
     <div>
       <canvas id="canvas" height={height} width={width} className="canvas"></canvas>
-      <button onClick={() => createSingleCircle({ rectPoint, drawList })}>发球</button>
+      <button onClick={() => createSingleCircle({
+        rectPoint,
+        drawList,
+        x: rectPoint.x + rectPoint.width / 2,
+        y: rectPoint.y - 10
+      })}>发球</button>
     </div>
   )
   return inner
