@@ -14,7 +14,10 @@ function IndexPage () {
     const rectPoint = {
       x: 200,
       y: 600,
-      xDirect: 1
+      height: 10,
+      width: 120,
+      xDirect: 1,
+      stepLength: 0
     }
     drawAll([
       {
@@ -26,7 +29,8 @@ function IndexPage () {
             r: 5,
             xDirect: 1,
             yDirect: 1
-          }
+          },
+          rectPoint: rectPoint
         }
       },
       {
@@ -41,8 +45,10 @@ function IndexPage () {
       const e = event || window.event
       if (e && e.keyCode === 39) { // press >
         rectPoint.xDirect = 1
+        rectPoint.stepLength = 14
       } else if (e && e.keyCode === 37) { // press <
         rectPoint.xDirect = -1
+        rectPoint.stepLength = 14
       }
     }
   }, 0)
