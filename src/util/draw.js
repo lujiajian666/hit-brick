@@ -104,12 +104,16 @@ function drawBricks ({ ctx, brickList }) {
 }
 function drawSingleBrick (ctx, brick) {
   ctx.beginPath()
-  ctx.fillStyle = brick.indestructible ? '#999' : 'white'
+  ctx.fillStyle = brick.indestructible ? '#666' : 'green'
+  ctx.strokeStyle = 'black'
+  ctx.lineWidth = 1
   ctx.rect(brick.x, brick.y, brick.width, brick.height)
   ctx.fill()
+  ctx.stroke()
 }
 
-// 不能卡在中间，最上边以下的，不算触碰
+// 触碰检测。
+// 不能卡在球拍中间，最上边以下的，不算触碰
 function intersect (rect, circle) {
   const targetPoint = {}
 
