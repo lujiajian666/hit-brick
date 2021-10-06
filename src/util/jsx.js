@@ -484,11 +484,46 @@ function createElement (tagName, props = {}, ...childNodes) {
     } else if (typeof childNode === 'string') {
       el.appendChild(document.createTextNode(childNode))
     } else {
-      throw new Error(`Expected "object" or "string" but received "${typeof value}"`)
+      if (childNode !== false) {
+        throw new Error(`Expected "object" or "string" but received "${typeof value}"`)
+      }
     }
   })
   return el
 }
 
-window.React = {}
-React.createElement = createElement
+let renderAction
+function render (component, containerDom) {
+  renderAction = function () {
+    index = 0
+    const child = containerDom.children[0]
+    const newChild = component()
+    if (child) {
+      containerDom.replaceChild(newChild, child)
+    } else {
+      containerDom.appendChild(newChild)
+    }
+  }
+  renderAction()
+}
+
+const _state = []
+let index = 0
+function useState (initialValue) {
+  const currentIndex = index
+  _state[currentIndex] = _state[currentIndex] === undefined ? initialValue : _state[currentIndex]
+  const setState = newValue => {
+    if (newValue !== _state[currentIndex]) {
+      _state[currentIndex] = newValue
+      renderAction()
+    }
+  }
+  index += 1
+  return [_state[currentIndex], setState]
+}
+
+window.React = {
+  createElement,
+  render,
+  useState
+}

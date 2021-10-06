@@ -3,9 +3,17 @@ function remove (drawList, id) {
   const index = drawList.findIndex((item) => item.id === id)
   drawList.splice(index, 1)
 }
-function collectDraw (ctx, width, height) {
+let count = 0
+function collectDraw (ctx, width, height, callBack) {
+  count++
+  const _count = count
   return function drawAll (drawList) {
     ctx.clearRect(0, 0, width, height)
+    if (drawList.length <= 1) {
+      callBack('end')
+    } else {
+      callBack('start')
+    }
     drawList.forEach(({ handle, param, id }) => handle({
       ...param,
       width,
@@ -13,7 +21,7 @@ function collectDraw (ctx, width, height) {
       ctx,
       remove: remove.bind(null, drawList, id)
     }))
-    window.requestIdleCallback(drawAll.bind(null, drawList))
+    _count === count && window.requestIdleCallback(drawAll.bind(null, drawList))
   }
 }
 function startDrawCircle ({ ctx, height, width, point, rectPoint, remove }) {
@@ -32,12 +40,15 @@ function startDrawCircle ({ ctx, height, width, point, rectPoint, remove }) {
   if (targetY < 0 || isIntersect) {
     point.yDirect *= -1
   }
-  if (targetX > width || targetX < 0 || isIntersect) {
+  if (targetX > width || targetX < 0) {
     point.xDirect *= -1
   }
   if (isIntersect) {
     // 赋予水平方向的速度
     point.xDirect += rectPoint.xDirect * rectPoint.stepLength / rectPoint.maxStepLength
+    if (Math.abs(point.xDirect) > 2) {
+      point.xDirect = point.xDirect > 0 ? 1.5 : -1.5
+    }
   }
   point.y = point.y + point.yDirect * stepLength
   point.x = point.x + point.xDirect * stepLength

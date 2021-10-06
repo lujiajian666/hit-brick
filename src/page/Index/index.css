@@ -7,3 +7,12 @@ p, body {
   display: block;
   margin: 0 auto;
 }
+.over-box {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 100px;
+  color: white;
+  font-size: 25px;
+  text-align: center;
+}
