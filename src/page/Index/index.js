@@ -1,7 +1,7 @@
 import {
-  startDrawCircle,
+  drawCircle,
   collectDraw,
-  startDrawRect
+  drawRacket
 } from '../../util/draw'
 import './index.css'
 let id = 0
@@ -17,7 +17,7 @@ const rectPoint = {
 function createSingleCircle ({ rectPoint, x, y }) {
   const singleCircle = {
     id: ++id,
-    handle: startDrawCircle,
+    handle: drawCircle,
     param: {
       point: {
         x,
@@ -37,7 +37,7 @@ function IndexPage () {
   const [isOver, setIsOver] = React.useState(false)
   const [drawList, setDrawList] = React.useState([
     {
-      handle: startDrawRect,
+      handle: drawRacket,
       param: {
         point: rectPoint
       }

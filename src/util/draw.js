@@ -24,7 +24,7 @@ function collectDraw (ctx, width, height, callBack) {
     _count === count && window.requestIdleCallback(drawAll.bind(null, drawList))
   }
 }
-function startDrawCircle ({ ctx, height, width, point, rectPoint, remove }) {
+function drawCircle ({ ctx, height, width, point, rectPoint, remove }) {
   const stepLength = 5
   ctx.beginPath()
   ctx.fillStyle = 'white'
@@ -57,7 +57,7 @@ function startDrawCircle ({ ctx, height, width, point, rectPoint, remove }) {
   ctx.fill()
 }
 
-function startDrawRect ({ ctx, width, point }) {
+function drawRacket ({ ctx, width, point }) {
   const stepLength = point.stepLength--
   if (stepLength <= 0) point.stepLength = 0
   ctx.beginPath()
@@ -92,4 +92,4 @@ function intersect (rect, circle) {
   return Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
 }
 
-export { startDrawCircle, collectDraw, startDrawRect }
+export { drawCircle, collectDraw, drawRacket }
