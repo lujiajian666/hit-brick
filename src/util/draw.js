@@ -1,74 +1,111 @@
 
-function remove (drawList, id) {
-  const index = drawList.findIndex((item) => item.id === id)
-  drawList.splice(index, 1)
-}
 let count = 0
-function collectDraw (ctx, width, height, callBack) {
+function collectDraw (ctx, screenHeight, screenWidth, callBack) {
   count++
   const _count = count
-  return function drawAll (drawList) {
-    ctx.clearRect(0, 0, width, height)
-    if (drawList.length <= 1) {
-      callBack('end')
-    } else {
-      callBack('start')
+  return function drawAll (drawMap) {
+    ctx.clearRect(0, 0, screenWidth, screenHeight)
+    const commonParam = {
+      screenWidth,
+      screenHeight,
+      ctx
     }
-    drawList.forEach(({ handle, param, id }) => handle({
-      ...param,
-      width,
-      height,
-      ctx,
-      remove: remove.bind(null, drawList, id)
-    }))
-    _count === count && window.requestIdleCallback(drawAll.bind(null, drawList))
+    drawMap.brick.handle({
+      ...drawMap.brick.param,
+      ...commonParam
+    })
+    drawMap.racket.handle({
+      ...drawMap.racket.param,
+      ...commonParam
+    })
+    if (drawMap.circle.param.circleList.length > 0) {
+      callBack('start')
+      drawMap.circle.handle({
+        ...drawMap.circle.param,
+        ...commonParam
+      })
+    } else {
+      callBack('end')
+    }
+    _count === count && window.requestIdleCallback(drawAll.bind(null, drawMap))
   }
 }
-function drawCircle ({ ctx, height, width, point, rectPoint, remove }) {
+
+function drawRacket ({ ctx, screenWidth, racket }) {
+  const stepLength = racket.stepLength--
+  if (stepLength <= 0) racket.stepLength = 0
+  ctx.beginPath()
+  ctx.fillStyle = 'red'
+  const targetX = racket.x + racket.xDirect * stepLength
+  if (targetX > screenWidth - racket.width || targetX < 0) {
+    racket.xDirect = 0
+    // point.xDirect *= -1
+  }
+  racket.x = racket.x + racket.xDirect * stepLength
+  ctx.rect(racket.x, racket.y, racket.width, racket.height)
+  ctx.fill()
+}
+
+function drawCircles (params) {
+  const { circleList, racket, ...other } = params
+  circleList.forEach((circle) => {
+    drawSingleCircle({
+      ...other,
+      circle,
+      racket,
+      remove () {
+        const index = circleList.findIndex((item) => item.id === circle.id)
+        circleList.splice(index, 1)
+      }
+    })
+  })
+}
+function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove }) {
   const stepLength = 5
   ctx.beginPath()
   ctx.fillStyle = 'white'
 
-  const targetY = point.y + point.yDirect * stepLength
-  const targetX = point.x + point.xDirect * stepLength
-  const isIntersect = intersect(rectPoint, { x: targetX, y: targetY, r: point.r })
+  const targetY = circle.y + circle.yDirect * stepLength
+  const targetX = circle.x + circle.xDirect * stepLength
+  const isIntersect = intersect(racket, { x: targetX, y: targetY, r: circle.r })
 
-  if (targetY > height) {
+  if (targetY > screenHeight) {
     remove()
     return
   }
   if (targetY < 0 || isIntersect) {
-    point.yDirect *= -1
+    circle.yDirect *= -1
   }
-  if (targetX > width || targetX < 0) {
-    point.xDirect *= -1
+  if (targetX > screenWidth || targetX < 0) {
+    circle.xDirect *= -1
   }
   if (isIntersect) {
     // 赋予水平方向的速度
-    point.xDirect += rectPoint.xDirect * rectPoint.stepLength / rectPoint.maxStepLength
-    if (Math.abs(point.xDirect) > 2) {
-      point.xDirect = point.xDirect > 0 ? 1.5 : -1.5
+    circle.xDirect += racket.xDirect * racket.stepLength / racket.maxStepLength
+    if (Math.abs(circle.xDirect) > 2) {
+      circle.xDirect = circle.xDirect > 0 ? 1.5 : -1.5
     }
   }
-  point.y = point.y + point.yDirect * stepLength
-  point.x = point.x + point.xDirect * stepLength
+  circle.y = circle.y + circle.yDirect * stepLength
+  circle.x = circle.x + circle.xDirect * stepLength
 
-  ctx.arc(point.x, point.y, point.r, 0, 2 * Math.PI)
+  ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
   ctx.fill()
 }
 
-function drawRacket ({ ctx, width, point }) {
-  const stepLength = point.stepLength--
-  if (stepLength <= 0) point.stepLength = 0
+function drawBricks ({ ctx, brickList }) {
+  brickList.forEach((brick) => {
+    drawSingleBrick(ctx, {
+      ...brick,
+      height: 10,
+      width: 20
+    })
+  })
+}
+function drawSingleBrick (ctx, brick) {
   ctx.beginPath()
-  ctx.fillStyle = 'red'
-  const targetX = point.x + point.xDirect * stepLength
-  if (targetX > width - point.width || targetX < 0) {
-    point.xDirect = 0
-    // point.xDirect *= -1
-  }
-  point.x = point.x + point.xDirect * stepLength
-  ctx.rect(point.x, point.y, point.width, point.height)
+  ctx.fillStyle = brick.indestructible ? '#999' : 'white'
+  ctx.rect(brick.x, brick.y, brick.width, brick.height)
   ctx.fill()
 }
 
@@ -92,4 +129,4 @@ function intersect (rect, circle) {
   return Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
 }
 
-export { drawCircle, collectDraw, drawRacket }
+export { drawCircles, collectDraw, drawRacket, drawBricks }

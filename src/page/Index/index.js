@@ -1,11 +1,13 @@
 import {
-  drawCircle,
+  drawCircles,
   collectDraw,
-  drawRacket
+  drawRacket,
+  drawBricks
 } from '../../util/draw'
+import levelInfo from '../../util/levelInfo'
 import './index.css'
 let id = 0
-const rectPoint = {
+const racketInfo = {
   x: 200,
   y: 600,
   height: 10,
@@ -14,38 +16,48 @@ const rectPoint = {
   stepLength: 0,
   maxStepLength: 14
 }
-function createSingleCircle ({ rectPoint, x, y }) {
-  const singleCircle = {
-    id: ++id,
-    handle: drawCircle,
+const circleList = []
+const drawList = {
+  brick: {
+    handle: drawBricks,
     param: {
-      point: {
-        x,
-        y,
-        r: 5,
-        xDirect: 0,
-        yDirect: -1
-      },
-      rectPoint: rectPoint
+      brickList: levelInfo[0].bricks()
+    }
+  },
+  racket: {
+    handle: drawRacket,
+    param: {
+      racket: racketInfo
+    }
+  },
+  circle: {
+    handle: drawCircles,
+    param: {
+      circleList,
+      racket: racketInfo
     }
   }
-  return singleCircle
 }
+
+function addCircle ({ x, y }) {
+  circleList.push({
+    id: ++id,
+    x,
+    y,
+    r: 5,
+    xDirect: 0,
+    yDirect: -1
+  })
+}
+
 function IndexPage () {
-  const height = 700
-  const width = 500
+  const screenHeight = 700
+  const screenWidth = 500
   const [isOver, setIsOver] = React.useState(false)
-  const [drawList, setDrawList] = React.useState([
-    {
-      handle: drawRacket,
-      param: {
-        point: rectPoint
-      }
-    }
-  ])
+
   setTimeout(() => {
     const context = document.getElementById('canvas').getContext('2d')
-    const drawAll = collectDraw(context, width, height, (sign) => {
+    const drawAll = collectDraw(context, screenHeight, screenWidth, (sign) => {
       if (sign === 'end') {
         setIsOver(true)
       } else {
@@ -56,11 +68,11 @@ function IndexPage () {
     document.onkeydown = function (event) {
       const e = event || window.event
       if (e && e.keyCode === 39) { // press >
-        rectPoint.xDirect = 1
-        rectPoint.stepLength = rectPoint.maxStepLength
+        racketInfo.xDirect = 1
+        racketInfo.stepLength = racketInfo.maxStepLength
       } else if (e && e.keyCode === 37) { // press <
-        rectPoint.xDirect = -1
-        rectPoint.stepLength = rectPoint.maxStepLength
+        racketInfo.xDirect = -1
+        racketInfo.stepLength = racketInfo.maxStepLength
       }
     }
 
@@ -69,19 +81,16 @@ function IndexPage () {
 
   const inner = (
     <div>
-      <canvas id="canvas" height={height} width={width} className="canvas"></canvas>
+      <canvas id="canvas" height={screenHeight} width={screenWidth} className="canvas"></canvas>
       {
         isOver &&
         <div className='over-box'>Game Over</div>
       }
       <button onClick={() => {
-        const newCircle = createSingleCircle({
-          rectPoint,
-          drawList,
-          x: rectPoint.x + rectPoint.width / 2,
-          y: rectPoint.y - 10
+        addCircle({
+          x: racketInfo.x + racketInfo.width / 2,
+          y: racketInfo.y - 10
         })
-        setDrawList([...drawList, newCircle])
       }}>发球</button>
     </div>
   )
