@@ -23,6 +23,7 @@ const drawList = {
   brick: {
     handle: drawBricks,
     param: {
+      brickListAvailable: calcLevelInfo(0).available,
       brickList: calcLevelInfo(0).brickList
     }
   },
@@ -56,16 +57,12 @@ function addCircle ({ x, y }) {
 function IndexPage () {
   const screenHeight = 700
   const screenWidth = 500
-  const [isOver, setIsOver] = React.useState(false)
+  const [endText, setEndText] = React.useState('')
 
   setTimeout(() => {
     const context = document.getElementById('canvas').getContext('2d')
-    const drawAll = collectDraw(context, screenHeight, screenWidth, (sign) => {
-      if (sign === 'end') {
-        setIsOver(true)
-      } else {
-        setIsOver(false)
-      }
+    const drawAll = collectDraw(context, screenHeight, screenWidth, (text) => {
+      setEndText(text)
     })
 
     document.onkeydown = function (event) {
@@ -86,8 +83,8 @@ function IndexPage () {
     <div>
       <canvas id="canvas" height={screenHeight} width={screenWidth} className="canvas"></canvas>
       {
-        isOver &&
-        <div className='over-box'>Game Over</div>
+        endText !== '' &&
+        <div className='over-box'>{endText}</div>
       }
       <button onClick={() => {
         addCircle({

@@ -20,14 +20,19 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
       ...drawMap.racket.param,
       ...commonParam
     })
-    if (drawMap.circle.param.circleList.length > 0) {
-      callBack('start')
-      drawMap.circle.handle({
-        ...drawMap.circle.param,
-        ...commonParam
-      })
+
+    if (drawMap.brick.param.brickList.length === drawMap.brick.param.brickListAvailable) {
+      callBack('胜利')
     } else {
-      callBack('end')
+      if (drawMap.circle.param.circleList.length > 0) {
+        callBack('')
+        drawMap.circle.handle({
+          ...drawMap.circle.param,
+          ...commonParam
+        })
+      } else {
+        callBack('发球开始游戏')
+      }
     }
     _count === count && window.requestIdleCallback(drawAll.bind(null, drawMap))
   }
