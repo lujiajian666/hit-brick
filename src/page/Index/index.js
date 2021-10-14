@@ -4,15 +4,17 @@ import {
   drawRacket,
   drawBricks
 } from '../../util/draw'
-import levelInfo from '../../util/levelInfo'
+import { calcLevelInfoFactory } from '../../util/levelInfo'
 import './index.css'
 let id = 0
+const calcLevelInfo = calcLevelInfoFactory()
+
 const racketInfo = {
   x: 200,
   y: 600,
   height: 10,
   width: 120,
-  xDirect: 1,
+  xVerctor: 1,
   stepLength: 0,
   maxStepLength: 14
 }
@@ -21,7 +23,7 @@ const drawList = {
   brick: {
     handle: drawBricks,
     param: {
-      brickList: levelInfo[0].bricks()
+      brickList: calcLevelInfo(0).brickList
     }
   },
   racket: {
@@ -34,7 +36,8 @@ const drawList = {
     handle: drawCircles,
     param: {
       circleList,
-      racket: racketInfo
+      racket: racketInfo,
+      brickClassifyMap: calcLevelInfo(0).classifyMap
     }
   }
 }
@@ -68,10 +71,10 @@ function IndexPage () {
     document.onkeydown = function (event) {
       const e = event || window.event
       if (e && e.keyCode === 39) { // press >
-        racketInfo.xDirect = 1
+        racketInfo.xVerctor = 1
         racketInfo.stepLength = racketInfo.maxStepLength
       } else if (e && e.keyCode === 37) { // press <
-        racketInfo.xDirect = -1
+        racketInfo.xVerctor = -1
         racketInfo.stepLength = racketInfo.maxStepLength
       }
     }
