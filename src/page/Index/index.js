@@ -58,8 +58,8 @@ function addCircle ({ x, y }) {
     x,
     y,
     r: 5,
-    xDirect: 0,
-    yDirect: -1
+    xSpeed: 0,
+    ySpeed: -1
   })
 }
 

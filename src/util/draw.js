@@ -75,8 +75,8 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   ctx.beginPath()
   ctx.fillStyle = 'white'
 
-  const targetY = circle.y + circle.yDirect * stepLength
-  const targetX = circle.x + circle.xDirect * stepLength
+  const targetY = circle.y + circle.ySpeed * stepLength
+  const targetX = circle.x + circle.xSpeed * stepLength
 
   if (targetY > screenHeight) {
     remove()
@@ -91,30 +91,29 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   })
 
   if (targetY < 0) {
-    circle.yDirect *= -1
+    circle.ySpeed = Math.abs(circle.ySpeed)
   }
-  if (targetX > screenWidth || targetX < 0) {
-    circle.xDirect *= -1
+  if (targetX >= screenWidth || targetX <= 0) {
+    circle.xSpeed = Math.abs(circle.xSpeed) * targetX <= 0 ? 1 : -1
   }
   if (isIntersect.hasIntersect) {
     if (isIntersect.y) {
-      circle.yDirect *= -1
+      circle.ySpeed *= -1
     }
     if (isIntersect.x) {
-      circle.xDirect *= -1
+      circle.xSpeed *= -1
     }
-    if (isIntersect.xDirect) {
+    if (isIntersect.xSpeed) {
       // 赋予水平方向的速度
-      // circle.xDirect += racket.xDirect * racket.stepLength / racket.maxStepLength
-      circle.xDirect += isIntersect.xDirect
-      if (Math.abs(circle.xDirect) > 1) {
-        circle.xDirect = circle.xDirect > 0 ? 1 : -1
+      circle.xSpeed += isIntersect.xSpeed
+      if (Math.abs(circle.xSpeed) > 1) {
+        circle.xSpeed = circle.xSpeed > 0 ? 1 : -1
       }
     }
   }
   circle.y = targetY
   circle.x = targetX
-
+  console.debug('circle', circle, isIntersect)
   ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
   ctx.fill()
 }
@@ -225,7 +224,7 @@ function checkIntersect (rect, circle, isRacket = false) {
         hasIntersect: false,
         y: false,
         x: false,
-        xDirect: 0
+        xSpeed: 0
       }
     }
   } else {
@@ -253,7 +252,7 @@ function calcIntersectInfo ({ targetPoint, circle, isRacket, rect }) {
     hasIntersect: false,
     y: false,
     x: false,
-    xDirect: 0
+    xSpeed: 0
   }
 
   const hasIntersect = Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
@@ -262,7 +261,7 @@ function calcIntersectInfo ({ targetPoint, circle, isRacket, rect }) {
       return {
         hasIntersect: true,
         y: true,
-        xDirect: rect.stepLength / rect.maxStepLength * rect.xVerctor
+        xSpeed: rect.stepLength / rect.maxStepLength * rect.xVerctor
       }
     }
     const rectCenterPoint = { x: rect.x + BRICK_WIDTH / 2, y: rect.y + BRICK_HEIGHT / 2 }
