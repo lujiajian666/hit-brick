@@ -20,7 +20,10 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
       ...drawMap.racket.param,
       ...commonParam
     })
-
+    drawMap.prop.handle({
+      ...drawMap.prop.param,
+      ...commonParam
+    })
     if (drawMap.brick.param.brickList.length === drawMap.brick.param.brickListAvailable) {
       callBack('胜利')
     } else {
@@ -67,23 +70,26 @@ function drawCircles (params) {
     })
   })
 }
-function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove, brickClassifyMap }) {
+function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove, brickClassifyMap, propList }) {
   const stepLength = 5
   ctx.beginPath()
   ctx.fillStyle = 'white'
 
   const targetY = circle.y + circle.yDirect * stepLength
   const targetX = circle.x + circle.xDirect * stepLength
-  const isIntersect = arroundIntersectDetect(
-    brickClassifyMap,
-    racket,
-    { x: targetX, y: targetY, r: circle.r }
-  )
 
   if (targetY > screenHeight) {
     remove()
     return
   }
+
+  const isIntersect = arroundIntersectDetect({
+    propList,
+    brickClassifyMap,
+    racket,
+    circle: { x: targetX, y: targetY, r: circle.r }
+  })
+
   if (targetY < 0) {
     circle.yDirect *= -1
   }
@@ -101,13 +107,13 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
       // 赋予水平方向的速度
       // circle.xDirect += racket.xDirect * racket.stepLength / racket.maxStepLength
       circle.xDirect += isIntersect.xDirect
-      if (Math.abs(circle.xDirect) > 2) {
-        circle.xDirect = circle.xDirect > 0 ? 1.5 : -1.5
+      if (Math.abs(circle.xDirect) > 1) {
+        circle.xDirect = circle.xDirect > 0 ? 1 : -1
       }
     }
   }
-  circle.y = circle.y + circle.yDirect * stepLength
-  circle.x = circle.x + circle.xDirect * stepLength
+  circle.y = targetY
+  circle.x = targetX
 
   ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
   ctx.fill()
@@ -115,7 +121,7 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
 
 function drawBricks ({ ctx, brickList }) {
   brickList.forEach((brick) => {
-    if (!brick.show) return
+    if (!brick || !brick.show) return
     drawSingleBrick(ctx, {
       ...brick,
       height: BRICK_HEIGHT,
@@ -133,12 +139,47 @@ function drawSingleBrick (ctx, brick) {
   ctx.stroke()
 }
 
+function drawProps ({ ctx, propList, screenHeight }) {
+  propList.forEach((prop) => {
+    drawSingleProp(ctx, {
+      prop,
+      screenHeight,
+      remove: () => {
+        const removeIndex = propList.findIndex((item) => item.id === prop.id)
+        propList.splice(removeIndex, 1)
+      }
+    })
+  })
+}
+function drawSingleProp (ctx, { prop, screenHeight, remove }) {
+  const stepLength = 2
+  ctx.beginPath()
+  ctx.fillStyle = 'orange'
+
+  const targetY = prop.y + stepLength
+  if (targetY > screenHeight) {
+    remove()
+    return
+  }
+  prop.y = targetY
+  ctx.arc(prop.x, targetY, prop.r, 0, 2 * Math.PI)
+  ctx.fill()
+}
+
 function tryRemoveBrick (brick) {
   if (brick.indestructible) return
   brick.show = false
 }
+function tryDisplayProp (brick, propList) {
+  if (brick.prop === undefined) return
+  propList.push({
+    x: brick.x + BRICK_WIDTH / 2,
+    y: brick.y + BRICK_HEIGHT / 2,
+    r: 5
+  })
+}
 // 查看球上下左右有没有东西触碰
-function arroundIntersectDetect (brickClassifyMap, racket, circle) {
+function arroundIntersectDetect ({ brickClassifyMap, racket, circle, propList }) {
   const detectRes = {
     hasIntersect: false
   }
@@ -146,11 +187,17 @@ function arroundIntersectDetect (brickClassifyMap, racket, circle) {
   const arroundBricks = findArroundBricks(circle)
   // 找出第一块碰撞的砖块，获取其碰撞面，碰撞x速度等信息
   arroundBricks.some((brick) => {
-    if (brickClassifyMap[brick.x] && brickClassifyMap[brick.x][brick.y]) {
+    if (
+      brickClassifyMap[brick.x] &&
+      brickClassifyMap[brick.x][brick.y] &&
+      brickClassifyMap[brick.x][brick.y].show
+    ) {
       const intersectRes = checkIntersect(brickClassifyMap[brick.x][brick.y], circle)
       if (intersectRes.hasIntersect) {
         Object.assign(detectRes, intersectRes)
-        // 碰撞后不显示砖块
+        // 碰撞后掉落道具
+        tryDisplayProp(brickClassifyMap[brick.x][brick.y], propList)
+        // 碰撞后消除砖块
         tryRemoveBrick(brickClassifyMap[brick.x][brick.y])
         return true
       }
@@ -208,6 +255,7 @@ function calcIntersectInfo ({ targetPoint, circle, isRacket, rect }) {
     x: false,
     xDirect: 0
   }
+
   const hasIntersect = Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
   if (hasIntersect) {
     if (isRacket) {
@@ -272,4 +320,4 @@ function getRadian (point1, point2, pointCenter) {
   return Math.acos(cosValue)
 }
 
-export { drawCircles, collectDraw, drawRacket, drawBricks }
+export { drawCircles, collectDraw, drawRacket, drawBricks, drawProps }

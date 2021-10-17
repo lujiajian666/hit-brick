@@ -2,7 +2,8 @@ import {
   drawCircles,
   collectDraw,
   drawRacket,
-  drawBricks
+  drawBricks,
+  drawProps
 } from '../../util/draw'
 import { calcLevelInfoFactory } from '../../util/levelInfo'
 import './index.css'
@@ -16,9 +17,10 @@ const racketInfo = {
   width: 120,
   xVerctor: 1,
   stepLength: 0,
-  maxStepLength: 14
+  maxStepLength: 12
 }
 const circleList = []
+const propList = []
 const drawList = {
   brick: {
     handle: drawBricks,
@@ -38,7 +40,14 @@ const drawList = {
     param: {
       circleList,
       racket: racketInfo,
+      propList,
       brickClassifyMap: calcLevelInfo(0).classifyMap
+    }
+  },
+  prop: {
+    handle: drawProps,
+    param: {
+      propList
     }
   }
 }
