@@ -5,7 +5,7 @@ const BRICK_WIDTH = 10
 function collectDraw (ctx, screenHeight, screenWidth, callBack) {
   count++
   const _count = count
-  return function drawAll (drawMap) {
+  return function drawAll (drawMap, pause) {
     ctx.clearRect(0, 0, screenWidth, screenHeight)
     const commonParam = {
       screenWidth,
@@ -37,7 +37,7 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
         callBack('发球开始游戏')
       }
     }
-    _count === count && window.requestIdleCallback(drawAll.bind(null, drawMap))
+    _count === count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
   }
 }
 
@@ -71,23 +71,27 @@ function drawCircles (params) {
   })
 }
 function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove, brickClassifyMap, propList }) {
-  const stepLength = 5
+  const stepLength = 4
   ctx.beginPath()
   ctx.fillStyle = 'white'
 
-  const targetY = circle.y + circle.ySpeed * stepLength
-  const targetX = circle.x + circle.xSpeed * stepLength
+  let targetY = circle.y + circle.ySpeed * stepLength
+  let targetX = circle.x + circle.xSpeed * stepLength
 
   if (targetY > screenHeight) {
     remove()
     return
   }
 
-  const isIntersect = arroundIntersectDetect({
+  const intersectInfo = arroundIntersectDetect({
     propList,
     brickClassifyMap,
     racket,
-    circle: { x: targetX, y: targetY, r: circle.r }
+    circle: {
+      ...circle,
+      x: targetX,
+      y: targetY
+    }
   })
 
   if (targetY < 0) {
@@ -96,24 +100,27 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   if (targetX >= screenWidth || targetX <= 0) {
     circle.xSpeed = Math.abs(circle.xSpeed) * targetX <= 0 ? 1 : -1
   }
-  if (isIntersect.hasIntersect) {
-    if (isIntersect.y) {
+  if (intersectInfo.hasIntersect) {
+    if (intersectInfo.yIntersect) {
       circle.ySpeed *= -1
     }
-    if (isIntersect.x) {
+    if (intersectInfo.xIntersect) {
       circle.xSpeed *= -1
     }
-    if (isIntersect.xSpeed) {
+    if (intersectInfo.xSpeed) {
       // 赋予水平方向的速度
-      circle.xSpeed += isIntersect.xSpeed
+      circle.xSpeed += intersectInfo.xSpeed
       if (Math.abs(circle.xSpeed) > 1) {
         circle.xSpeed = circle.xSpeed > 0 ? 1 : -1
       }
     }
+    if (intersectInfo.idearPosition) {
+      targetY = intersectInfo.idearPosition.y
+      targetX = intersectInfo.idearPosition.x
+    }
   }
   circle.y = targetY
   circle.x = targetX
-  console.debug('circle', circle, isIntersect)
   ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
   ctx.fill()
 }
@@ -182,31 +189,63 @@ function arroundIntersectDetect ({ brickClassifyMap, racket, circle, propList })
   const detectRes = {
     hasIntersect: false
   }
-  // 找出小球附近的所有砖块
+  // 找出小球附近的所有有可能的格子
   const arroundBricks = findArroundBricks(circle)
-  // 找出第一块碰撞的砖块，获取其碰撞面，碰撞x速度等信息
-  arroundBricks.some((brick) => {
-    if (
+  // 碰撞的砖块中，找出距离最短的，获取其碰撞面，碰撞x速度等信息
+  const minDistanceInfo = {
+    distance: Number.MAX_SAFE_INTEGER,
+    brick: null
+  }
+  arroundBricks.filter(
+    (brick) =>
       brickClassifyMap[brick.x] &&
       brickClassifyMap[brick.x][brick.y] &&
       brickClassifyMap[brick.x][brick.y].show
-    ) {
-      const intersectRes = checkIntersect(brickClassifyMap[brick.x][brick.y], circle)
-      if (intersectRes.hasIntersect) {
-        Object.assign(detectRes, intersectRes)
-        // 碰撞后掉落道具
-        tryDisplayProp(brickClassifyMap[brick.x][brick.y], propList)
-        // 碰撞后消除砖块
-        tryRemoveBrick(brickClassifyMap[brick.x][brick.y])
-        return true
-      }
+  ).forEach((brick) => {
+    const brickCenterPoint = {
+      x: brick.x + brick.width / 2,
+      y: brick.y + brick.height / 2
     }
-    return false
+    const distance = Math.pow(circle.x - brickCenterPoint.x, 2) + Math.pow(circle.y - brickCenterPoint.y, 2)
+    if (distance < minDistanceInfo.distance) {
+      minDistanceInfo.distance = distance
+      minDistanceInfo.brick = brickClassifyMap[brick.x][brick.y]
+    }
   })
-  if (!detectRes.hasIntersect) {
+  if (minDistanceInfo.brick) {
+    const intersectRes = checkIntersect(minDistanceInfo.brick, circle)
+    Object.assign(detectRes, intersectRes)
+    // 归位，碰撞后要把小球移动到碰撞边界的位置。
+    // 若小球位置在砖块内部，下一轮的碰撞检测会有偏差
+    const idearPosition = { ...circle }
+    if (detectRes.xIntersect) {
+      idearPosition.x = circle.xSpeed > 0
+        ? (minDistanceInfo.brick.x - circle.r)
+        : (minDistanceInfo.brick.x + BRICK_WIDTH + circle.r)
+    } else if (detectRes.yIntersect) {
+      idearPosition.y =
+        circle.ySpeed > 0
+          ? (minDistanceInfo.brick.y - circle.r)
+          : (minDistanceInfo.brick.y + BRICK_HEIGHT + circle.r)
+    }
+    Object.assign(detectRes, {
+      idearPosition
+    })
+    // 碰撞后掉落道具
+    tryDisplayProp(minDistanceInfo.brick, propList)
+    // 碰撞后消除砖块
+    tryRemoveBrick(minDistanceInfo.brick)
+  } else {
     const hasIntersectWithRacket = checkIntersect(racket, circle, true)
     if (hasIntersectWithRacket.hasIntersect) {
       Object.assign(detectRes, hasIntersectWithRacket)
+      // 归位，碰撞后要把小球移动到碰撞边界的位置。
+      Object.assign(detectRes, {
+        idearPosition: {
+          y: racket.y - circle.r,
+          x: circle.x
+        }
+      })
     }
   }
   return detectRes
@@ -215,9 +254,8 @@ function arroundIntersectDetect ({ brickClassifyMap, racket, circle, propList })
 // 不能卡在球拍中间，最上边以下的，不算触碰
 function checkIntersect (rect, circle, isRacket = false) {
   const targetPoint = {}
-
   if (isRacket) {
-    if (circle.y <= rect.y - circle.r) {
+    if (circle.y > 580 && circle.y < 620) {
       targetPoint.y = rect.y
     } else {
       return {
@@ -247,30 +285,34 @@ function checkIntersect (rect, circle, isRacket = false) {
 
   return calcIntersectInfo({ targetPoint, circle, isRacket, rect })
 }
+const COS_DEG_45 = Math.SQRT2 / 2
 function calcIntersectInfo ({ targetPoint, circle, isRacket, rect }) {
   const res = {
     hasIntersect: false,
-    y: false,
-    x: false,
+    yIntersect: false,
+    xIntersect: false,
     xSpeed: 0
   }
+  const distance = Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2))
+  const hasIntersect = distance <= circle.r
 
-  const hasIntersect = Math.sqrt(Math.pow(targetPoint.x - circle.x, 2) + Math.pow(targetPoint.y - circle.y, 2)) <= circle.r
   if (hasIntersect) {
     if (isRacket) {
       return {
         hasIntersect: true,
-        y: true,
-        xSpeed: rect.stepLength / rect.maxStepLength * rect.xVerctor
+        yIntersect: true,
+        xSpeed: rect.stepLength / rect.maxStepLength * rect.xVerctor,
+        distance
       }
     }
     const rectCenterPoint = { x: rect.x + BRICK_WIDTH / 2, y: rect.y + BRICK_HEIGHT / 2 }
-    const angle = getRadian(circle, { x: 1, y: 0 }, rectCenterPoint)
-    const isIntersectY = angle > Math.PI / 4 && angle < 1.25 * Math.PI
+    const cos = getRadian(circle, rectCenterPoint)
+    const isIntersectY = cos < COS_DEG_45
     Object.assign(res, {
       hasIntersect: true,
-      y: isIntersectY,
-      x: !isIntersectY
+      yIntersect: isIntersectY,
+      xIntersect: !isIntersectY,
+      distance
     })
   }
   return res
@@ -297,15 +339,15 @@ function findArroundBricks (circle) {
   }
   return res
 }
-function getRadian (point1, point2, pointCenter) {
+function getRadian (point1, point2) {
   // 夹角
   const vector1 = {
-    x: point1.x - pointCenter.x,
-    y: point1.y - pointCenter.y
+    x: point1.x - point2.x,
+    y: point1.y - point2.y
   }
   const vector2 = {
-    x: point2.x - pointCenter.x,
-    y: point2.y - pointCenter.y
+    x: vector1.x > 0 ? 1 : -1,
+    y: 0
   }
   // 向量的乘积
   const productValue = (vector1.x * vector2.x) + (vector1.y * vector2.y)
@@ -315,8 +357,7 @@ function getRadian (point1, point2, pointCenter) {
   const vector2Value = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y)
   // 余弦公式
   const cosValue = productValue / (vector1Value * vector2Value)
-  // acos返回的是弧度值，转换为角度值
-  return Math.acos(cosValue)
+  return cosValue
 }
 
 export { drawCircles, collectDraw, drawRacket, drawBricks, drawProps }

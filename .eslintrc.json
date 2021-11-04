@@ -2,5 +2,8 @@
   "extends": "standard",
   "globals": {
     "React": true
+  },
+  "rules": {
+    "no-debugger": "off"
   }
 }

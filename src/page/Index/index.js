@@ -15,7 +15,7 @@ const racketInfo = {
   y: 600,
   height: 10,
   width: 120,
-  xVerctor: 1,
+  xVerctor: 0,
   stepLength: 0,
   maxStepLength: 12
 }
@@ -67,6 +67,7 @@ function IndexPage () {
   const screenHeight = 700
   const screenWidth = 500
   const [endText, setEndText] = React.useState('')
+  const [pause, setPause] = React.useState(false)
 
   setTimeout(() => {
     const context = document.getElementById('canvas').getContext('2d')
@@ -85,7 +86,7 @@ function IndexPage () {
       }
     }
 
-    drawAll(drawList)
+    drawAll(drawList, pause)
   }, 0)
 
   const inner = (
@@ -101,6 +102,12 @@ function IndexPage () {
           y: racketInfo.y - 10
         })
       }}>发球</button>
+      &nbsp;&nbsp;&nbsp;
+      <button onClick={() => {
+        setPause(!pause)
+      }}>
+        {pause ? '开始' : '暂停'}
+      </button>
     </div>
   )
   return inner

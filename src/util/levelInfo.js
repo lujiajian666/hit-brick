@@ -43,7 +43,7 @@ const levelInfo = [
         }).flat(),
         ...Array(50).fill().map((_, index) => ({
           id: ++idCount, x: index * 10, y: 100, indestructible: true, show: true
-        })).filter((_, index) => index < 10 || (index > 20 && index < 30) || (index > 40 && index < 50))
+        })).filter((_, index) => index < 10 || (index > 40 && index < 50))
       ]
     }
   }
