@@ -98,7 +98,7 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
     circle.ySpeed = Math.abs(circle.ySpeed)
   }
   if (targetX >= screenWidth || targetX <= 0) {
-    circle.xSpeed = Math.abs(circle.xSpeed) * targetX <= 0 ? 1 : -1
+    circle.xSpeed = Math.abs(circle.xSpeed) * (targetX <= 0 ? 1 : -1)
   }
   if (intersectInfo.hasIntersect) {
     if (intersectInfo.yIntersect) {
