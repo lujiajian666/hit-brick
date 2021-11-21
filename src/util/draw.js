@@ -43,7 +43,7 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
     addEvent('split', function () {
       setTimeout(() => {
         const currentList = drawMap.circle.param.circleList
-        if (currentList.length >= 30) return
+        if (currentList.length >= 40) return
         const appendList = []
         currentList.forEach((circle) => {
           const [v1, v2] = division({ x: circle.xSpeed, y: circle.ySpeed })
