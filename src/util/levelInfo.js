@@ -64,17 +64,14 @@ function classifyBricks (brickList) {
 }
 
 export function calcLevelInfoFactory () {
-  const cache = {}
   return (level) => {
-    if (cache[level] === undefined) {
-      const brickList = levelInfo[level].bricks()
-      const classifyMap = classifyBricks(brickList)
-      cache[level] = {
-        brickList,
-        brickListAvailable: brickList.filter((item) => !item.indestructible).length,
-        classifyMap
-      }
+    const brickList = levelInfo[level].bricks()
+    const classifyMap = classifyBricks(brickList)
+    return {
+      brickList,
+      brickListIndestructible: brickList.filter((item) => item.indestructible).length,
+      brickListShowCount: brickList.filter((item) => item.show).length,
+      classifyMap
     }
-    return cache[level]
   }
 }

@@ -7,7 +7,7 @@ import {
 } from '../../util/draw'
 import { calcLevelInfoFactory } from '../../util/levelInfo'
 import './index.css'
-let id = 0
+window.id = 0
 const calcLevelInfo = calcLevelInfoFactory()
 
 const racketInfo = {
@@ -21,12 +21,14 @@ const racketInfo = {
 }
 const circleList = []
 const propList = []
+const levelMessage = calcLevelInfo(0)
 const drawList = {
   brick: {
     handle: drawBricks,
     param: {
-      brickListAvailable: calcLevelInfo(0).available,
-      brickList: calcLevelInfo(0).brickList
+      brickListIndestructible: levelMessage.brickListIndestructible,
+      brickList: levelMessage.brickList,
+      brickListShowCount: levelMessage.brickListShowCount
     }
   },
   racket: {
@@ -41,20 +43,21 @@ const drawList = {
       circleList,
       racket: racketInfo,
       propList,
-      brickClassifyMap: calcLevelInfo(0).classifyMap
+      brickClassifyMap: levelMessage.classifyMap
     }
   },
   prop: {
     handle: drawProps,
     param: {
-      propList
+      propList,
+      racket: racketInfo
     }
   }
 }
 
 function addCircle ({ x, y }) {
   circleList.push({
-    id: ++id,
+    id: ++window.id,
     x,
     y,
     r: 5,

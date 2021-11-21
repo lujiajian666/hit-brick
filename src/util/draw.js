@@ -1,10 +1,11 @@
 
-let count = 0
+import { addEvent, emitEvent } from './event'
+import globalVarible from './globalVariable'
 const BRICK_HEIGHT = 10
 const BRICK_WIDTH = 10
 function collectDraw (ctx, screenHeight, screenWidth, callBack) {
-  count++
-  const _count = count
+  globalVarible.count++
+  const _count = globalVarible.count
   return function drawAll (drawMap, pause) {
     ctx.clearRect(0, 0, screenWidth, screenHeight)
     const commonParam = {
@@ -24,10 +25,11 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
       ...drawMap.prop.param,
       ...commonParam
     })
-    if (drawMap.brick.param.brickList.length === drawMap.brick.param.brickListAvailable) {
+    if (globalVarible.hasStart && drawMap.brick.param.brickListShowCount === drawMap.brick.param.brickListIndestructible) {
       callBack('胜利')
     } else {
       if (drawMap.circle.param.circleList.length > 0) {
+        globalVarible.hasStart = true
         callBack('')
         drawMap.circle.handle({
           ...drawMap.circle.param,
@@ -37,7 +39,26 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
         callBack('发球开始游戏')
       }
     }
-    _count === count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
+    _count === globalVarible.count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
+    addEvent('split', function () {
+      setTimeout(() => {
+        const currentList = drawMap.circle.param.circleList
+        if (currentList.length >= 30) return
+        const appendList = []
+        currentList.forEach((circle) => {
+          const [v1, v2] = division({ x: circle.xSpeed, y: circle.ySpeed })
+          appendList.push({ ...circle, ...v1, id: ++window.id })
+          appendList.push({ ...circle, ...v2, id: ++window.id })
+        })
+        currentList.push(...appendList)
+        console.debug('all list', currentList)
+      })
+    })
+    addEvent('removeBrick', function (brick) {
+      if (brick.indestructible) return
+      brick.show = false
+      drawMap.brick.param.brickListShowCount--
+    })
   }
 }
 
@@ -47,11 +68,13 @@ function drawRacket ({ ctx, screenWidth, racket }) {
   ctx.beginPath()
   ctx.fillStyle = 'red'
   const targetX = racket.x + racket.xVerctor * stepLength
-  if (targetX > screenWidth - racket.width || targetX < 0) {
+  const rightBounds = screenWidth - racket.width
+  const leftBounds = 0
+  if (targetX > rightBounds || targetX < leftBounds) {
     racket.xVerctor = 0
     // point.xVerctor *= -1
   }
-  racket.x = racket.x + racket.xVerctor * stepLength
+  racket.x = Math.max(leftBounds, Math.min(rightBounds, targetX))
   ctx.rect(racket.x, racket.y, racket.width, racket.height)
   ctx.fill()
 }
@@ -145,11 +168,12 @@ function drawSingleBrick (ctx, brick) {
   ctx.stroke()
 }
 
-function drawProps ({ ctx, propList, screenHeight }) {
+function drawProps ({ ctx, propList, screenHeight, racket }) {
   propList.forEach((prop) => {
     drawSingleProp(ctx, {
       prop,
       screenHeight,
+      racket,
       remove: () => {
         const removeIndex = propList.findIndex((item) => item.id === prop.id)
         propList.splice(removeIndex, 1)
@@ -157,12 +181,19 @@ function drawProps ({ ctx, propList, screenHeight }) {
     })
   })
 }
-function drawSingleProp (ctx, { prop, screenHeight, remove }) {
+function drawSingleProp (ctx, { prop, screenHeight, remove, racket }) {
   const stepLength = 2
   ctx.beginPath()
   ctx.fillStyle = 'orange'
 
   const targetY = prop.y + stepLength
+  const res = checkIntersect(racket, prop, true).hasIntersect
+  if (res) {
+    // 分裂小球
+    emitEvent('split')
+    remove()
+    return
+  }
   if (targetY > screenHeight) {
     remove()
     return
@@ -173,8 +204,7 @@ function drawSingleProp (ctx, { prop, screenHeight, remove }) {
 }
 
 function tryRemoveBrick (brick) {
-  if (brick.indestructible) return
-  brick.show = false
+  emitEvent('removeBrick', brick)
 }
 function tryDisplayProp (brick, propList) {
   if (brick.prop === undefined) return
@@ -358,6 +388,19 @@ function getRadian (point1, point2) {
   // 余弦公式
   const cosValue = productValue / (vector1Value * vector2Value)
   return cosValue
+}
+// 小球分裂
+function division (vector) {
+  return [
+    rotateVector(vector, 120),
+    rotateVector(vector, 120)
+  ]
+}
+// 逆时针旋转 deg 度的向量转换方法
+function rotateVector (vector, deg) {
+  const xSpeed = vector.x * Math.cos(deg) - vector.y * Math.sin(deg)
+  const ySpeed = vector.y * Math.cos(deg) + vector.x * Math.sin(deg)
+  return { xSpeed, ySpeed }
 }
 
 export { drawCircles, collectDraw, drawRacket, drawBricks, drawProps }
