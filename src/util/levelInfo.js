@@ -2,11 +2,13 @@ export const PROP_TYPE = {
   FISSION: Symbol('type'),
   THREE_LAUNCH: Symbol('type')
 }
+export const BRICK_HEIGHT = 10
+export const BRICK_WIDTH = 10
 const levelInfo = [
   {
     bricks: () => {
       let idCount = 0
-      return [
+      const list = [
         ...Array(10).fill().map((_, indexY) => {
           return [
             { id: ++idCount, x: 20, y: indexY * 10, indestructible: false, show: true, prop: PROP_TYPE.FISSION },
@@ -45,6 +47,11 @@ const levelInfo = [
           id: ++idCount, x: index * 10, y: 100, indestructible: true, show: true
         })).filter((_, index) => index < 10 || (index > 40 && index < 50))
       ]
+      list.forEach((item) => {
+        item.height = BRICK_HEIGHT
+        item.width = BRICK_WIDTH
+      })
+      return list
     }
   }
 ]

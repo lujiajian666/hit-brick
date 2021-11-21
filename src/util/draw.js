@@ -1,8 +1,8 @@
 
 import { addEvent, emitEvent } from './event'
 import globalVarible from './globalVariable'
-const BRICK_HEIGHT = 10
-const BRICK_WIDTH = 10
+import { BRICK_HEIGHT, BRICK_WIDTH } from './levelInfo'
+
 function collectDraw (ctx, screenHeight, screenWidth, callBack) {
   globalVarible.count++
   const _count = globalVarible.count
@@ -51,7 +51,6 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
           appendList.push({ ...circle, ...v2, id: ++window.id })
         })
         currentList.push(...appendList)
-        console.debug('all list', currentList)
       })
     })
     addEvent('removeBrick', function (brick) {
@@ -113,7 +112,9 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
     circle: {
       ...circle,
       x: targetX,
-      y: targetY
+      y: targetY,
+      originX: circle.x,
+      originY: circle.y
     }
   })
 
@@ -151,11 +152,7 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
 function drawBricks ({ ctx, brickList }) {
   brickList.forEach((brick) => {
     if (!brick || !brick.show) return
-    drawSingleBrick(ctx, {
-      ...brick,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH
-    })
+    drawSingleBrick(ctx, brick)
   })
 }
 function drawSingleBrick (ctx, brick) {
@@ -209,6 +206,7 @@ function tryRemoveBrick (brick) {
 function tryDisplayProp (brick, propList) {
   if (brick.prop === undefined) return
   propList.push({
+    id: ++window.id,
     x: brick.x + BRICK_WIDTH / 2,
     y: brick.y + BRICK_HEIGHT / 2,
     r: 5
@@ -335,8 +333,10 @@ function calcIntersectInfo ({ targetPoint, circle, isRacket, rect }) {
         distance
       }
     }
-    const rectCenterPoint = { x: rect.x + BRICK_WIDTH / 2, y: rect.y + BRICK_HEIGHT / 2 }
-    const cos = getRadian(circle, rectCenterPoint)
+    const rectCenterPoint = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
+    // 用碰撞之前的圆的位置和矩形位置推算碰撞角度
+    // 直接碰撞之后的位置计算不准，因为那个时候很大可能已经重叠了
+    const cos = getRadian({ x: circle.originX, y: circle.originY }, rectCenterPoint)
     const isIntersectY = cos < COS_DEG_45
     Object.assign(res, {
       hasIntersect: true,
@@ -393,7 +393,7 @@ function getRadian (point1, point2) {
 function division (vector) {
   return [
     rotateVector(vector, 120),
-    rotateVector(vector, 120)
+    rotateVector(vector, 240)
   ]
 }
 // 逆时针旋转 deg 度的向量转换方法
