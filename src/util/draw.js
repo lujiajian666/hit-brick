@@ -3,20 +3,27 @@ import { addEvent, emitEvent } from './event'
 import globalVarible from './globalVariable'
 import { BRICK_HEIGHT, BRICK_WIDTH } from './levelInfo'
 
-function collectDraw (ctx, screenHeight, screenWidth, callBack) {
+let reDrawReactCount = 0
+function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWidth, callBack) {
   globalVarible.count++
-  const _count = globalVarible.count
+  const _reRenderCount = globalVarible.count
+  let _reDrawReactCount = -1
   return function drawAll (drawMap, pause) {
     ctx.clearRect(0, 0, screenWidth, screenHeight)
     const commonParam = {
       screenWidth,
       screenHeight,
-      ctx
+      ctx,
+      contextForBrick
     }
-    drawMap.brick.handle({
-      ...drawMap.brick.param,
-      ...commonParam
-    })
+    if (_reDrawReactCount !== reDrawReactCount) {
+      _reDrawReactCount = reDrawReactCount
+      contextForBrick.clearRect(0, 0, screenWidth, screenHeight)
+      drawMap.brick.handle({
+        ...drawMap.brick.param,
+        ...commonParam
+      })
+    }
     drawMap.racket.handle({
       ...drawMap.racket.param,
       ...commonParam
@@ -39,7 +46,7 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
         callBack('发球开始游戏')
       }
     }
-    _count === globalVarible.count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
+    _reRenderCount === globalVarible.count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
     addEvent('split', function () {
       setTimeout(() => {
         const currentList = drawMap.circle.param.circleList
@@ -57,6 +64,7 @@ function collectDraw (ctx, screenHeight, screenWidth, callBack) {
       if (brick.indestructible) return
       brick.show = false
       drawMap.brick.param.brickListShowCount--
+      reDrawReactCount++
     })
   }
 }
@@ -149,10 +157,10 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   ctx.fill()
 }
 
-function drawBricks ({ ctx, brickList }) {
+function drawBricks ({ contextForBrick, brickList }) {
   brickList.forEach((brick) => {
     if (!brick || !brick.show) return
-    drawSingleBrick(ctx, brick)
+    drawSingleBrick(contextForBrick, brick)
   })
 }
 function drawSingleBrick (ctx, brick) {

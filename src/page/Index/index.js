@@ -74,7 +74,12 @@ function IndexPage () {
 
   setTimeout(() => {
     const context = document.getElementById('canvas').getContext('2d')
-    const drawAll = collectDraw(context, screenHeight, screenWidth, (text) => {
+    const contextForBrick = document.getElementById('canvas2').getContext('2d')
+
+    const drawAll = collectDraw({
+      context,
+      contextForBrick
+    }, screenHeight, screenWidth, (text) => {
       setEndText(text)
     })
 
@@ -94,6 +99,7 @@ function IndexPage () {
 
   const inner = (
     <div>
+      <canvas id="canvas2" height={screenHeight} width={screenWidth} className="canvas canvas2"></canvas>
       <canvas id="canvas" height={screenHeight} width={screenWidth} className="canvas"></canvas>
       {
         endText !== '' &&

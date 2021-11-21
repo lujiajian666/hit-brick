@@ -3,9 +3,17 @@ p, body {
   padding: 0;
 }
 .canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
   background: black;
   display: block;
   margin: 0 auto;
+  background: transparent;
+}
+.canvas2 {
+  background: black;
 }
 .over-box {
   position: fixed;
