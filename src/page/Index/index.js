@@ -50,7 +50,6 @@ const drawList = {
     param: {
       circleList,
       racket: racketInfo,
-      propList,
       brickClassifyMap: levelMessage.classifyMap
     }
   },

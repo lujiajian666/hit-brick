@@ -4,6 +4,7 @@ import globalVarible from './globalVariable'
 import { BRICK_HEIGHT, BRICK_WIDTH } from './levelInfo'
 
 let reDrawReactCount = 0
+let splitCount
 function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWidth, callBack) {
   globalVarible.count++
   const _reRenderCount = globalVarible.count
@@ -29,8 +30,8 @@ function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWid
       ...commonParam
     })
     drawMap.prop.handle({
-      ...drawMap.prop.param,
-      ...commonParam
+      param: drawMap.prop.param,
+      commonParam
     })
     if (globalVarible.hasStart && drawMap.brick.param.brickListShowCount === drawMap.brick.param.brickListIndestructible) {
       callBack('胜利')
@@ -39,8 +40,8 @@ function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWid
         globalVarible.hasStart = true
         callBack('')
         drawMap.circle.handle({
-          ...drawMap.circle.param,
-          ...commonParam
+          param: drawMap.circle.param,
+          commonParam
         })
       } else {
         callBack('发球开始游戏')
@@ -48,7 +49,8 @@ function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWid
     }
     _reRenderCount === globalVarible.count && !pause && window.requestIdleCallback(drawAll.bind(null, drawMap, pause))
     addEvent('split', function () {
-      setTimeout(() => {
+      if (splitCount !== undefined) clearTimeout(splitCount)
+      splitCount = setTimeout(() => {
         const currentList = drawMap.circle.param.circleList
         if (currentList.length >= 40) return
         const appendList = []
@@ -58,13 +60,22 @@ function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWid
           appendList.push({ ...circle, ...v2, id: ++window.id })
         })
         currentList.push(...appendList)
-      })
+      }, 100)
     })
     addEvent('removeBrick', function (brick) {
       if (brick.indestructible) return
       brick.show = false
       drawMap.brick.param.brickListShowCount--
       reDrawReactCount++
+    })
+    addEvent('addProp', function (brick) {
+      if (brick.prop === undefined) return
+      drawMap.prop.param.propList.push({
+        id: ++window.id,
+        x: brick.x + BRICK_WIDTH / 2,
+        y: brick.y + BRICK_HEIGHT / 2,
+        r: 5
+      })
     })
   }
 }
@@ -87,20 +98,22 @@ function drawRacket ({ ctx, screenWidth, racket }) {
 }
 
 function drawCircles (params) {
-  const { circleList, racket, ...other } = params
-  circleList.forEach((circle) => {
+  const { param, commonParam } = params
+  const { circleList, racket, brickClassifyMap } = param
+  param.circleList = circleList.filter((circle) => circle.show !== false)
+  param.circleList.forEach((circle) => {
     drawSingleCircle({
-      ...other,
+      ...commonParam,
+      brickClassifyMap,
       circle,
       racket,
       remove () {
-        const index = circleList.findIndex((item) => item.id === circle.id)
-        circleList.splice(index, 1)
+        circle.show = false
       }
     })
   })
 }
-function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove, brickClassifyMap, propList }) {
+function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, remove, brickClassifyMap }) {
   const stepLength = 4
   ctx.beginPath()
   ctx.fillStyle = 'white'
@@ -114,7 +127,6 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   }
 
   const intersectInfo = arroundIntersectDetect({
-    propList,
     brickClassifyMap,
     racket,
     circle: {
@@ -174,8 +186,12 @@ function drawSingleBrick (ctx, brick) {
   ctx.stroke()
 }
 
-function drawProps ({ ctx, propList, screenHeight, racket }) {
-  propList.filter((prop) => prop.show !== false).forEach((prop) => {
+function drawProps (params) {
+  const { param, commonParam } = params
+  const { propList, racket } = param
+  const { ctx, screenHeight } = commonParam
+  param.propList = propList.filter((prop) => prop.show !== false)
+  param.propList.forEach((prop) => {
     drawSingleProp(ctx, {
       prop,
       screenHeight,
@@ -208,20 +224,8 @@ function drawSingleProp (ctx, { prop, screenHeight, remove, racket }) {
   }
 }
 
-function tryRemoveBrick (brick) {
-  emitEvent('removeBrick', brick)
-}
-function tryDisplayProp (brick, propList) {
-  if (brick.prop === undefined) return
-  propList.push({
-    id: ++window.id,
-    x: brick.x + BRICK_WIDTH / 2,
-    y: brick.y + BRICK_HEIGHT / 2,
-    r: 5
-  })
-}
 // 查看球上下左右有没有东西触碰
-function arroundIntersectDetect ({ brickClassifyMap, racket, circle, propList }) {
+function arroundIntersectDetect ({ brickClassifyMap, racket, circle }) {
   const detectRes = {
     hasIntersect: false
   }
@@ -268,9 +272,9 @@ function arroundIntersectDetect ({ brickClassifyMap, racket, circle, propList })
       idearPosition
     })
     // 碰撞后掉落道具
-    tryDisplayProp(minDistanceInfo.brick, propList)
+    emitEvent('addProp', minDistanceInfo.brick)
     // 碰撞后消除砖块
-    tryRemoveBrick(minDistanceInfo.brick)
+    emitEvent('removeBrick', minDistanceInfo.brick)
   } else {
     const hasIntersectWithRacket = checkIntersect(racket, circle, true)
     if (hasIntersectWithRacket.hasIntersect) {
