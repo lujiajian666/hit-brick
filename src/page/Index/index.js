@@ -7,7 +7,15 @@ import {
 } from '../../util/draw'
 import { calcLevelInfoFactory } from '../../util/levelInfo'
 import './index.css'
+import { emitEvent } from '../../util/event'
+
 window.id = 0
+let dom
+window.playSound = function () {
+  if (dom === undefined) dom = document.getElementById('audio')
+  dom.currentTime = 0
+  dom.play()
+}
 const calcLevelInfo = calcLevelInfoFactory()
 
 const racketInfo = {
@@ -99,6 +107,7 @@ function IndexPage () {
 
   const inner = (
     <div>
+      <audio src='./assets/audio.mp3' id="audio" />
       <canvas id="canvas2" height={screenHeight} width={screenWidth} className="canvas canvas2"></canvas>
       <canvas id="canvas" height={screenHeight} width={screenWidth} className="canvas"></canvas>
       {
@@ -111,12 +120,16 @@ function IndexPage () {
           y: racketInfo.y - 10
         })
       }}>发球</button>
-      &nbsp;&nbsp;&nbsp;
+      <br/>
       <button onClick={() => {
         setPause(!pause)
       }}>
         {pause ? '开始' : '暂停'}
       </button>
+      <br/>
+      <button onClick={() => {
+        emitEvent('split')
+      }}>分裂</button>
     </div>
   )
   return inner

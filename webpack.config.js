@@ -1,6 +1,7 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   entry: './src/main.js',
@@ -34,6 +35,9 @@ module.exports = {
       template: path.resolve(__dirname, './public/index.html'),
       title: 'hit brick'
     }),
+    new CopyPlugin([
+      { from: 'public/assets', to: 'assets' }
+    ]),
     new ESLintPlugin()
   ],
   optimization: {

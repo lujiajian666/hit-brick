@@ -133,6 +133,7 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
     circle.xSpeed = Math.abs(circle.xSpeed) * (targetX <= 0 ? 1 : -1)
   }
   if (intersectInfo.hasIntersect) {
+    window.playSound()
     if (intersectInfo.yIntersect) {
       circle.ySpeed *= -1
     }
@@ -401,7 +402,7 @@ function getRadian (point1, point2) {
 function division (vector) {
   return [
     rotateVector(vector, 120),
-    rotateVector(vector, 240)
+    rotateVector(vector, -120)
   ]
 }
 // 逆时针旋转 deg 度的向量转换方法
