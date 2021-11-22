@@ -175,14 +175,13 @@ function drawSingleBrick (ctx, brick) {
 }
 
 function drawProps ({ ctx, propList, screenHeight, racket }) {
-  propList.forEach((prop) => {
+  propList.filter((prop) => prop.show !== false).forEach((prop) => {
     drawSingleProp(ctx, {
       prop,
       screenHeight,
       racket,
       remove: () => {
-        const removeIndex = propList.findIndex((item) => item.id === prop.id)
-        propList.splice(removeIndex, 1)
+        prop.show = false
       }
     })
   })
@@ -193,6 +192,10 @@ function drawSingleProp (ctx, { prop, screenHeight, remove, racket }) {
   ctx.fillStyle = 'orange'
 
   const targetY = prop.y + stepLength
+  prop.y = targetY
+  ctx.arc(prop.x, targetY, prop.r, 0, 2 * Math.PI)
+  ctx.fill()
+
   const res = checkIntersect(racket, prop, true).hasIntersect
   if (res) {
     // 分裂小球
@@ -202,11 +205,7 @@ function drawSingleProp (ctx, { prop, screenHeight, remove, racket }) {
   }
   if (targetY > screenHeight) {
     remove()
-    return
   }
-  prop.y = targetY
-  ctx.arc(prop.x, targetY, prop.r, 0, 2 * Math.PI)
-  ctx.fill()
 }
 
 function tryRemoveBrick (brick) {
