@@ -21,8 +21,8 @@ function collectDraw ({ context: ctx, contextForBrick }, screenHeight, screenWid
       _reDrawReactCount = reDrawReactCount
       contextForBrick.clearRect(0, 0, screenWidth, screenHeight)
       drawMap.brick.handle({
-        ...drawMap.brick.param,
-        ...commonParam
+        param: drawMap.brick.param,
+        commonParam
       })
     }
     drawMap.racket.handle({
@@ -170,10 +170,10 @@ function drawSingleCircle ({ ctx, screenHeight, screenWidth, circle, racket, rem
   ctx.fill()
 }
 
-function drawBricks ({ contextForBrick, brickList }) {
-  brickList.forEach((brick) => {
-    if (!brick || !brick.show) return
-    drawSingleBrick(contextForBrick, brick)
+function drawBricks (params) {
+  params.param.brickList = params.param.brickList.filter((brick) => brick && brick.show !== false)
+  params.param.brickList.forEach((brick) => {
+    drawSingleBrick(params.commonParam.contextForBrick, brick)
   })
 }
 function drawSingleBrick (ctx, brick) {
